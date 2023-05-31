@@ -1,0 +1,46 @@
+apiVersion: v1
+data:
+  apiToken: #API token that comes from dynatrace
+  
+kind: Secret
+metadata:
+  name: ocp-dynatrace
+  namespace: dynatrace
+type: Opaque
+---
+apiVersion: dynatrace.com/v1beta1
+kind: DynaKube
+metadata:
+  name: ocp-dynatrace
+  namespace: dynatrace
+  annotations:
+    feature.dynatrace.com/automatic-kubernetes-api-monitoring: "true"
+spec:
+  apiUrl: #URL for your unique dynatrace instance eg: https://hqg95700.live.dynatrace.com/api
+  skipCertCheck: false
+  oneAgent:
+    classicFullStack:
+      image:
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
+          operator: Exists
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
+      env:
+        - name: ONEAGENT_ENABLE_VOLUME_STORAGE
+          value: "false"
+  activeGate:
+    capabilities:
+      - routing
+      - kubernetes-monitoring
+      - dynatrace-api
+    image: ""
+    resources:
+      requests:
+        cpu: 500m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 1.5Gi
